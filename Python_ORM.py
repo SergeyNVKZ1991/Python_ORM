@@ -1,10 +1,12 @@
 import psycopg2
 
+import json
+
 import sqlalchemy
 import sqlalchemy as sq
 from sqlalchemy.orm import declarative_base, relationship, sessionmaker
 
-from models import create_tables, Publisher, Book, Shop, Stock, Sale
+from models import create_tables, Publisher, Shop, Book, Stock, Sale
 
 DSN = "postgresql://postgres:arinaegor@localhost:5432/postgres"
 engine = sqlalchemy.create_engine(DSN)
@@ -16,14 +18,53 @@ create_tables(engine)
 Session = sessionmaker(bind=engine)
 session = Session()
 
-# заполняем наши таблицы
-publisher = Publisher(name='Python')
-session.add(publisher)
+
+with open('test_date.json', 'r') as fd:
+    data = json.load(fd)
+
+for record in data:
+    model = {
+        'publisher': Publisher,
+        'shop': Shop,
+        'book': Book,
+        'stock': Stock,
+        'sale': Sale,
+    }[record.get('model')]
+    session.add(model(id=record.get('pk'), **record.get('fields')))
 session.commit()
 
+# publisher_name = input("Введите название издательства: ")
+publisher_name = "R"
 
+subq = session.query(Publisher).filter(Publisher.name.like(f'%{publisher_name}%')).subquery()
+book = session.query(Book).join(subq, Book.id == subq.c.id).all()
+shop = session.query(Shop).join(subq, Shop.id == subq.c.id).all()
+
+# stock = session.query(Stock).join(subq, Stock.id == subq.c.id).all()
+sale = session.query(Sale).join(subq, Sale.id == subq.c.id).all()
+
+print(sale)
+
+# date = {"book": [], "shop": [], }
+# for b in book:
+#     date["book"].append(b.title)
+#
+# for s in shop:
+#     date["shop"].append(s.name)
+# for v in date:
+#
+# print(date)
 
 session.close()
+
+# # заполняем наши таблицы
+# publisher = Publisher(name='Python')
+# session.add(publisher)
+# session.commit()
+
+
+
+
 
 # course1 = Course(name='Python')
 # print(course1.id)
