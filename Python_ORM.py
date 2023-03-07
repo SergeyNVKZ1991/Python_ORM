@@ -32,7 +32,8 @@ session.commit()
 
 def get_sales():
     # publisher_name = input('Введите имя издателя, факты покупки книг которого вы хотиите получь: ')
-    publisher_name = 'Reilly'
-    for c in session.query(Publisher.name, Book.title, Sale.price, Sale.date_sale).join(Book.publisher).join(Sale.stock).filter(Publisher.name.like(f'%{publisher_name}%')).all():
-        print(f'{c[0]} | {c[1]} | {c[2]} | {c[3]}')
+    publisher_name = 'P'
+    queru = session.query(Publisher, Book, Shop, Sale).join(Book).join(Stock).join(Shop).join(Sale).filter(Publisher.name.like(f'%{publisher_name}%')).all()
+    for c in queru:
+        print(f'{c.Book.title} | {c.Shop.name} | {c.Sale.price} | {c.Sale.date_sale}')
 get_sales()
